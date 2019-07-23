@@ -11,9 +11,10 @@ using MigrateApp.Models;
 
 namespace MigrateApp
 {
-    class Program
+    public class Program
     {
-        static void Main(string[] args)
+        private static List<UserFolderRelation> CorrelationList = new List<UserFolderRelation>();
+        public static void Main(string[] args)
         {
 
             Task t = new Task(GetAsync);
@@ -22,15 +23,15 @@ namespace MigrateApp
             Console.ReadLine();
 
         }
-        static async void GetAsync()
+        public static async void GetAsync()
         {
-           
+
             string Baseurl = "https://api.dropboxapi.com/2/team/members/list";
             var connectionurl = new Uri(@Baseurl);
             using (HttpClient client = new HttpClient())
             {
                 client.BaseAddress = connectionurl;
-             
+
                 HttpRequestMessage req = new HttpRequestMessage(HttpMethod.Post, connectionurl);
                 req.Headers.Add("Authorization", "Bearer qdOwzAg1H0YAAAAAABBh5AJKwTCsoYK5shEDoBF1kJtGJv8Q7fXOBK2mYMFbnjZN");
                 HttpResponseMessage httpResponseMessage = await client.SendAsync(req);
@@ -41,17 +42,26 @@ namespace MigrateApp
                 Models.MembersCollection members = JsonConvert.DeserializeObject<Models.MembersCollection>(responseString);
                 foreach (var member in members.members)
                 {
-                    GetFolderDetails(member.profile.team_member_id);
+                    string response = await GetFolderDetails(member.profile.team_member_id);
+                    UserFolderRelation userFolderRelation = new UserFolderRelation
+                    {
+                        MemberID = member.profile.team_member_id,
+                        UserName = member.profile.name,
+                        EmailID = member.profile.email,
+                        UFCorrelation = JsonConvert.DeserializeObject<Models.Entities>(response)
+                    };
+                    CorrelationList.Add(userFolderRelation);
                 }
 
             }
+
         }
-        static async void GetFolderDetails(string memberid)
+        private static async Task<string> GetFolderDetails(string memberid)
         {
             string Baseurl = "https://api.dropboxapi.com/2/files/list_folder";
             var connectionurl = new Uri(@Baseurl);
             PathRequest path = new PathRequest { path = "" };
-          
+
             using (HttpClient client = new HttpClient())
             {
                 client.BaseAddress = connectionurl;
@@ -61,9 +71,11 @@ namespace MigrateApp
                 HttpResponseMessage httpResponseMessage = await client.PostAsync(Baseurl, httpContent);
                 httpResponseMessage.EnsureSuccessStatusCode();
                 string memberDetail = await httpResponseMessage.Content.ReadAsStringAsync();
-
-                Models.Entities members = JsonConvert.DeserializeObject<Models.Entities>(memberDetail);
+                //Models.Entities members = JsonConvert.DeserializeObject<Models.Entities>(memberDetail);
+                return memberDetail;
             }
         }
     }
+
 }
+

@@ -49,8 +49,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Models\FolderDetails.cs" />
     <Compile Include="Models\Member.cs" />
     <Compile Include="Models\PathRequest.cs" />
+    <Compile Include="Models\UserFolderRelation.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
